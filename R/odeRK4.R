@@ -18,7 +18,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
   tt <- seq(t0, tn, length.out = n+1)
   # Number of state variables
   m <- length(IC)
-  # state variables
+  # state variables: list of grids of each state-variable. This will be the returned solution
   states <- list()
   for(i in 1:m)
   {
@@ -29,6 +29,10 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
   # Over every time-node
   for(j in 2:(n+1))
   {
+    k1 <- list()
+    k2 <- list()
+    k3 <- list()
+    k4 <- list()
     # For each state variable
     for(i in 1:m)
     {
@@ -37,10 +41,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       input2 <- list()
       input3 <- list()
       input4 <- list()
-      k1 <- list()
-      k2 <- list()
-      k3 <- list()
-      k4 <- list()
+
       # Time argument is first, always
       input1[[1]] <- tt[j-1]
       input2[[1]] <- tt[j-1]+0.5*h

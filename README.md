@@ -43,6 +43,7 @@ devtools::install_github("shill1729/odeSolveR")
 
 ## One dimensional ODEs
 ```r
+library(odeSolveR)
 # The ODE is given in the form y'(t)=f(t, y) with initial y(t_0)=y_0.
 # Here we solve y'=cos(t), y(0)=0. The solution is y=sin(t), of course.
 f <- function(t, y) cos(t)
