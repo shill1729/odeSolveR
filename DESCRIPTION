@@ -1,0 +1,13 @@
+Package: odeSolveR
+Type: Package
+Title: Implementation of simple Euler schemes and fourth-order Runge-Kutta methods for arbitrary first-order ODE systems
+Version: 0.1.0
+Author: S. Hill
+Maintainer: S. Hill <52792611+shill1729@users.noreply.github.com>
+Description: Returns numerical solutions to basic ODE problems, e.g. the SIR model for infectious diseases.
+    Can also handle generic first-order systems of ODEs. Finally, it includes a simple numerical solver for the novel 
+    SIDARTHE model developed in Italy to study the COVID-19 pandemic. The solver can use either the basic Euler scheme or the fourth-order Runge-Kutta method.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.2
