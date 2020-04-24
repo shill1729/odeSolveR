@@ -63,7 +63,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       for(l in 1:m)
       {
         # Second input is state[j-1]+0.5*h*k1[l]
-        input2[[l+1]] <- states[[l]][j-1]+0.5*k1[[l]]
+        input2[[l+1]] <- states[[l]][j-1]+0.5*k1[[l]]*h
 
       }
       names(input2) <- c("t", names(IC))
@@ -75,7 +75,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       # Get input ready for k3
       for(l in 1:m)
       {
-        input3[[l+1]] <- states[[l]][j-1]+0.5*k2[[l]]
+        input3[[l+1]] <- states[[l]][j-1]+0.5*k2[[l]]*h
 
       }
       names(input3) <- c("t", names(IC))
@@ -87,7 +87,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       # Get input ready for k4 the final term
       for(l in 1:m)
       {
-        input4[[l+1]] <- states[[l]][j-1]+k3[[l]]
+        input4[[l+1]] <- states[[l]][j-1]+k3[[l]]*h
       }
       names(input4) <- c("t", names(IC))
       for(l in 1:m)
