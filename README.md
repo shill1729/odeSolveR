@@ -334,7 +334,7 @@ plot(sol$x, sol$y, main = "Phase portrait", type = "l")
 
 Running an Euler scheme to solve the SIDARTHE model developed by the COVID19 IRCCS San Matteo Pavia TaskForce et al.
 
-### Parameters from original paper
+### Parameters from original paper, solved using an Euler scheme
 
 ```r
 library(odeSolveR)
@@ -364,202 +364,147 @@ initial_conditions <- list(i0 = 200/60000000,
 initial_conditions$s0 <- 1-sum(unlist(initial_conditions))
 sir.dat <- sidarthe(parameters, initial_conditions, tn = 300)
 ```
-### Example for classifying stable points
-Here is a work-in-progress example for testing classification of stable points.
-```r
-library(odeSolveR)
-# Numerical parameters
-t0 <- 0
-tn <- 600
-n <- 10000
+### SIDARTHE Example 2: manually fitted model parameters to US data, solved using RK4
 
-# Some data collection
-earths_surface_area <- 510.1 # in millions of km^2
-land_mass_area <- earths_surface_area*0.29
-forest_area <- land_mass_area*0.3
-
-# Model parameters
-parameters <- list(r = 0.3, M = forest_area, alpha = 0.10,
-                   s = 0.4, L = 50000, beta = 0.01,
-                   delta = 2, gamma = 1)
-
-# TODO: need a less hacky fix to load in parameters so they do not be referenced as parameters$parm in function bodies
-list2env(parameters, envir = .GlobalEnv)
-
-conditionCheck <- ((gamma*M*s*(r-alpha*L)-beta*delta*L*r)^2)/(4*gamma*beta*delta*L*M*s*r^2)
-print(paste("Condition > 1", conditionCheck > 1))
-
-# Equilibrium points
-A <- -gamma*r*s/(M*L*alpha*beta)
-B <- (gamma*M*s*(r-alpha*L)-beta*delta*L*r)/(alpha*beta*L*M)
-C <- delta*r/alpha
-xstar <- (-B-sqrt(B^2-4*A*C))/(2*A)
-ystar <- (r/alpha)*(1-xstar/M)
-zstar <- (s/beta)*(1-ystar/L)
-print(data.frame(xstar, ystar, zstar))
-
-jacobian <- function(x, y, z)
-{
-  rbind(c(r-alpha*y-2*r*x/M, -alpha*x, 0),
-        c(0, s-beta*z-2*s*y/L, -beta*y),
-        c(-gamma*z, delta, -gamma*x))
-}
-
-
-
-
-# Create the functions that describe the rates of change for each state variable in the ODE system
-f <- list(function(t, x, y, z) r*x*(1-x/M)-alpha*x*y,
-          function(t, x, y, z) s*y*(1-y/L)-beta*y*z,
-          function(t, x, y, z) delta*y-gamma*x*z
-)
-
-
-# Stability checks (x, y, z)
-f[[1]](1, xstar, ystar, zstar)
-f[[2]](1, xstar, ystar, zstar)
-f[[3]](1, xstar, ystar, zstar)
-# for (0, 0, z)
-f[[1]](1, 0, 0, zstar)
-f[[2]](1, 0, 0, zstar)
-f[[3]](1, 0, 0, zstar)
-
-# Initial conditions: names and order must match variables appearing after "t" in function definitions above!
-IC <- list(x = xstar+0.10, y = ystar-0.5, z = zstar)
-# Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
-
-# Graphing ranges
-ylim <- c(min(sol[,-1]), max(sol[,-1]))
-
-
-# Plot 2 dimension phase space of x-z variables
-par(mfrow = c(1, 1))
-plot(sol$time, sol$x, type = "l", col = "blue", ylim = ylim, main = "Trajectories over time")
-lines(sol$time, sol$y, col = "red")
-lines(sol$time, sol$z, col = "black")
-legend(x = "topright", legend = c("Biomass", "Humans", "CO2"), col = c("blue", "red", "black"), lty = 1)
-
-
-# Plot 3 dimensional phase portrait
-# par(ask = TRUE)
-plot3D::lines3D(x = sol$x, y = sol$y, z = sol$z, main = "Phase portrait")
-plot3D::points3D(x = xstar, ystar, zstar, add = TRUE)
-plot3D::points3D(x = 0, y = 0, z = 1, add = TRUE)
-# par(ask = FALSE)
-
-
-# Matrix evaluated at equilibrium point
-U <- jacobian(xstar, ystar, zstar)
-cl <- classify_equilibrium(A = U)
-print(cl)
-```
-
-### SIDARTHE Example 2: manually fitted model parameters to US data
-
-Below contains an ad-hoc fit to US state-wide data available from the **[NY Times covid-19 dataset](https://github.com/nytimes/covid-19-data)** on GitHub and some verbose output.
+Below contains an ad-hoc fit to US state-wide data available from the **[NY Times covid-19 dataset](https://github.com/nytimes/covid-19-data)** on GitHub. A model is produced with all 8 of the state variables graphed plus three additional graphs fitting two of the model curves to data and visualizing the death-rate.
 
 ```r
 library(odeSolveR)
-daysOut <- 30
-caseLimit <- 900000
-deathLimit <- 40000
-tn <- 500
-n <- 3000
+# Choose a terminal date to forecast until
+terminalDate <- "2020-08-30"
 pop <- 329.45*10^6 # US 2019 population
-# Reading NY Times github csv of cumulative cases; download their data and replace filepath with the correct path to /us-states.csv
+# Reading NY Times github csv of cumulative cases: replace 'filepath' with the path to the downloaded csv
+# Something like '.../Downloads/covid-19-data-master/covid-19-data-master/us-states.csv'
 dat <- read.csv(file = filepath)
 
 # Total US cases and deaths
 x <- aggregate(x = dat$cases, by = list(dat$date), FUN = sum)$x 
 y <- aggregate(x = dat$deaths, by = list(dat$date), FUN = sum)$x
 us_dat <- data.frame(date = as.Date(unique(dat$date)), cases = x, deaths = y) 
+
+# Length of data-set in days
+N <- length(us_dat$date)
+
+# Forecast dates
+extended_dates <- seq(as.Date(us_dat$date[N]), as.Date(terminalDate), by = 1)
+extended_dates <- extended_dates[-1] # Remove last day with data
+# Number of days to forecast out
+Nf <- length(extended_dates)
+# Total length of time of data-set + forecast period
+tn <- as.numeric(extended_dates[Nf]-us_dat$date[1])
+# Number of nodes: ensures 0.1 step
+n <- tn*10
+
 # SIDARTHE model parameters
 parameters <- list(alpha = 0.248,
                    beta = 0.05,
                    delta = 0.05,
                    gamma = 0.2,
-                   epsilon = 0.0016,
-                   theta = 0.4,
+                   epsilon = 0.0019,
+                   theta = 0.411,
                    zeta = 0.125,
                    eta = 0.125,
                    mu = 0.1,
                    nu = 0.1,
-                   tau = 0.00009,
-                   lambda = 0.009,
-                   rho = 0.005, 
+                   tau = 0.00015,
+                   lambda = 0.01,
+                   rho = 0.01, 
                    kappa = 0.02,
                    sigma = 0.06,
                    xi = 0.05)
-initial_conditions <- list(i0 = 600/pop, 
-                           d0 = 1/pop, 
-                           a0 = 1/pop, 
-                           r0 = 1/pop, 
-                           thr0 = 0,
-                           h0 = 0,
-                           e0 = 0)
-initial_conditions$s0 <- 1-sum(unlist(initial_conditions))
+list2env(x = parameters, envir = .GlobalEnv)
+# Initial conditions: S is set to 1-sum(...) afterwards, do not let the 0/pop throw you off...
+initial_conditions <- list(S = 0/pop,
+                           I = 450/pop, 
+                           D = 1/pop, 
+                           A = 1/pop, 
+                           R = 1/pop, 
+                           Th = 0,
+                           H = 0,
+                           E = 0)
+initial_conditions$S <- 1-sum(unlist(initial_conditions))
 
-# Plotting
+# Computing the basic reproduction ratio
+r1 <- epsilon+zeta+lambda
+r2 <- eta + rho
+r3 <- theta + mu + kappa
+r4 <- nu + xi
+repo <- alpha/r1 + beta*epsilon/(r1*r2) + gamma*zeta/(r1*r3) + delta*eta*epsilon/(r1*r2*r4) + delta*zeta*theta/(r1*r3*r4)
+
+# Setting the ODE functions
+f <- list(function(t, S, I, D, A, R, Th, H, E) -S*(alpha*I+beta*D+gamma*A+delta*R),
+          function(t, S, I, D, A, R, Th, H, E) S*(alpha*I+beta*D +gamma*A +delta*R)-(epsilon+zeta+lambda)*I,
+          function(t, S, I, D, A, R, Th, H, E) epsilon*I-(eta+rho)*D,
+          function(t, S, I, D, A, R, Th, H, E) zeta*I-(theta+mu+kappa)*A,
+          function(t, S, I, D, A, R, Th, H, E) eta*D+theta*A-(nu+xi)*R,
+          function(t, S, I, D, A, R, Th, H, E) mu*A+nu*R-(sigma+tau)*Th,
+          function(t, S, I, D, A, R, Th, H, E) lambda*I+rho*D+kappa*A+xi*R+sigma*Th,
+          function(t, S, I, D, A, R, Th, H, E) tau*Th
+)
+# Solving the ODE system with RK4
+sol <- ode(f = f, IC = initial_conditions, parameters = parameters, t0 = 0, tn = tn, n = n)
+
+
+# Plotting model output and fits to data
 par(mfrow = c(2, 2))
-sir.dat <- sidarthe(parameters, initial_conditions, tn = tn, n = n)
-sid <- sir.dat$sidarthe
+plot(sol$time, sol$S, type = "l", main = "Fractions of population", ylim = c(0, 1), xlab = "days", ylab = "% of population")
+for(i in 3:9)
+{
+  lines(sol[, 1], sol[, i], col = i-1)
+}
+legend(x = "topright", 
+       legend = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), 
+       lty = 1, col = c(1:10), cex = 0.5)
 
-# Cases vs model
-plot(c(us_dat$cases, rep(0, daysOut)), ylim = c(0, caseLimit), main = "Cumulative US daily cases", xlab = "Day", ylab = "# of cases")
-lines(sid$time, sid$diagnosed*pop, col = "green")
-# Deaths vs model
-plot(c(us_dat$deaths, rep(0, daysOut)), ylim = c(0, deathLimit), main = "Cumulative US daily deaths", xlab = "Day", ylab = "# of deaths")
-lines(sid$time, sid$extinct*pop, col = "grey")
+# Daily cases
+plot(c(us_dat$date, extended_dates), c(us_dat$cases, rep(NA, Nf)), ylim = c(0, max(us_dat$cases, sol$D*pop)), xlab = "Date", ylab = "# of cases", main = "Daily cumulative US cases")
+lines(c(us_dat$date, extended_dates), sol$D[sol$time%%1==0]*pop, col = "green")
+
+# Daily deaths
+plot(c(us_dat$date, extended_dates), c(us_dat$deaths, rep(NA, Nf)), ylim = c(0, max(us_dat$deaths, sol$E*pop)), xlab = "Date", ylab = "# of deaths", main = "Daily cumulative US deaths")
+lines(c(us_dat$date, extended_dates), sol$E[sol$time%%1==0]*pop, col = "grey")
+
 # Death-rate
-plot(us_dat$date, us_dat$deaths/us_dat$cases, main = "Death Rate")
+plot(us_dat$date, us_dat$deaths/us_dat$cases, main = "Death rate")
 
-# Peak infections
-dayPeakpc <- sid[which.max(sid$infected),]
-dayPeakabs <- sid[which.max(sid$infected),]*c(1, rep(pop, 8))
-# 1-day projection
-day1Projection <- sid[which.min(abs(sid$time-length(us_dat$date)-1)),]*c(1, rep(pop, 8))
-print("Latest Daily US data")
-print(tail(us_dat, 3))
-print("#=========================================================")
-print("1-DAY projection:")
-print(day1Projection)
-print("#=========================================================")
-print("Infection peak %'s")
-print(dayPeakpc)
-print("#=========================================================")
-print("Infection peak absolute levels")
-print(dayPeakabs)
-print("#=========================================================")
-print(paste("Peak of infections occurs on", Sys.Date()+round(dayPeakabs$time-length(us_dat$cases))))
-print(paste("Peak of severe cases occurs on", Sys.Date()+sid[which.max(sid$threatened),]$time))
-print(paste("Maximum severe cases =", sid[which.max(sid$threatened),]$threatened*pop))
-print(paste("Maximum deaths =",tail(sid$extinct,1)*pop, "=", tail(sid$extinct, 1)*100, "%"))
-print(paste("Projected new cases =", day1Projection$diagnosed-tail(us_dat$cases, 1)))
-print(paste("Projected new deaths =", day1Projection$extinct-tail(us_dat$deaths, 1)))
+# Printing the reproductive ratio
+print(paste("R0 = ", repo))
 ```
-### SIDARTHE Example 3: manually fitted model parameters to New York state data
+### SIDARTHE Example 3: manually fitted model parameters to New York state data, solved using RK4
 ...and another example for just a single state, e.g., New York.
 
-```
+```r
 library(odeSolveR)
-daysOut <- 90
-caseLimit <- 500000
-deathLimit <- 15000
-tn <- 300
-n <- 5000
+# Choose a terminal date to forecast until
+terminalDate <- "2020-08-30"
 pop <- 19.5*10^6 # NY 2019 population
-# Reading NY Times github csv of cumulative cases; download their data and replace filepath with the correct path to /us-states.csv
+# Reading NY Times github csv of cumulative cases: replace 'filepath' with the path to the downloaded csv
+# Something like '.../Downloads/covid-19-data-master/covid-19-data-master/us-states.csv'
 dat <- read.csv(file = filepath)
+
 # Get out just New York cases
 ny_dat <- dat[which(dat$state == "New York"),]
 ny_dat$date <- as.Date(ny_dat$date)
+
+# Length of data-set in days
+N <- length(ny_dat$date)
+
+# Forecast dates
+extended_dates <- seq(as.Date(ny_dat$date[N]), as.Date(terminalDate), by = 1)
+extended_dates <- extended_dates[-1] # Remove last day with data
+# Number of days to forecast out
+Nf <- length(extended_dates)
+# Total length of time of data-set + forecast period
+tn <- as.numeric(extended_dates[Nf]-ny_dat$date[1])
+# Number of nodes: ensures 0.1 step
+n <- tn*10
+
 # SIDARTHE model parameters
-parameters <- list(alpha = 0.25,
+parameters <- list(alpha = 0.248,
                    beta = 0.05,
                    delta = 0.05,
                    gamma = 0.2,
-                   epsilon = 0.01,
+                   epsilon = 0.0115,
                    theta = 0.5,
                    zeta = 0.125,
                    eta = 0.125,
@@ -571,50 +516,64 @@ parameters <- list(alpha = 0.25,
                    kappa = 0.02,
                    sigma = 0.06,
                    xi = 0.05)
-initial_conditions <- list(i0 = 24000/pop, 
-                           d0 = 2/pop, 
-                           a0 = 1/pop, 
-                           r0 = 1/pop, 
-                           thr0 = 0,
-                           h0 = 0,
-                           e0 = 0)
-initial_conditions$s0 <- 1-sum(unlist(initial_conditions))
-par(mfrow = c(2, 2))
-sir.dat <- sidarthe(parameters, initial_conditions, tn = tn, n = n)
-sid <- sir.dat$sidarthe
-# Plotting
-# par(mfrow = c(2, 1))
-# Cases vs model
-plot(c(ny_dat$cases, rep(0, daysOut)), ylim = c(0, caseLimit), main = "Cumulative NY daily cases", xlab = "Day", ylab = "# of cases")
-lines(sid$time, sid$diagnosed*pop, col = "green")
-# Deaths vs model
-plot(c(ny_dat$deaths, rep(0, daysOut)), ylim = c(0, deathLimit), main = "Cumulative NY daily deaths", xlab = "Day", ylab = "# of deaths")
-lines(sid$time, sid$extinct*pop, col = "grey")
-# Death rate
-plot(ny_dat$date, ny_dat$deaths/ny_dat$cases, main = "Death Rate")
+# Load in parameters. A bit hacky...
+list2env(x = parameters, envir = .GlobalEnv)
 
-# Peak infections
-dayPeakpc <- sid[which.max(sid$infected),]
-dayPeakabs <- sid[which.max(sid$infected),]*c(1, rep(pop, 8))
-# 1-day projection
-day1Projection <- sid[which.min(abs(sid$time-length(ny_dat$date)-1)),]*c(1, rep(pop, 8))
-print("Latest Daily NY data")
-print(tail(ny_dat, 3))
-print("#=========================================================")
-print("1-DAY projection:")
-print(day1Projection)
-print("#=========================================================")
-print("Infection peak %'s")
-print(dayPeakpc)
-print("#=========================================================")
-print("Infection peak absolute levels")
-print(dayPeakabs)
-print("#=========================================================")
-print(paste("Peak of infections occurs on", Sys.Date()+round(dayPeakabs$time-length(ny_dat$cases))))
-print(paste("Peak of severe cases occurs on", Sys.Date()+sid[which.max(sid$threatened),]$time))
-print(paste("Maximum severe cases =", sid[which.max(sid$threatened),]$threatened*pop))
-print(paste("Maximum deaths =",tail(sid$extinct,1)*pop, "=", tail(sid$extinct, 1)*100, "%"))
-print(paste("Projected new cases =", day1Projection$diagnosed-tail(ny_dat$cases, 1)))
-print(paste("Projected new deaths =", day1Projection$extinct-tail(ny_dat$deaths, 1)))
+# Initial conditions: S is set to 1-sum(...) afterwards, do not let the 0/pop throw you off...
+initial_conditions <- list(S = 0/pop,
+                           I = 22000/pop, 
+                           D = 1/pop, 
+                           A = 1/pop, 
+                           R = 1/pop, 
+                           Th = 0,
+                           H = 0,
+                           E = 0)
+initial_conditions$S <- 1-sum(unlist(initial_conditions))
+
+# Computing the basic reproduction ratio
+r1 <- epsilon+zeta+lambda
+r2 <- eta + rho
+r3 <- theta + mu + kappa
+r4 <- nu + xi
+repo <- alpha/r1 + beta*epsilon/(r1*r2) + gamma*zeta/(r1*r3) + delta*eta*epsilon/(r1*r2*r4) + delta*zeta*theta/(r1*r3*r4)
+
+# Setting the ODE functions
+f <- list(function(t, S, I, D, A, R, Th, H, E) -S*(alpha*I+beta*D+gamma*A+delta*R),
+          function(t, S, I, D, A, R, Th, H, E) S*(alpha*I+beta*D +gamma*A +delta*R)-(epsilon+zeta+lambda)*I,
+          function(t, S, I, D, A, R, Th, H, E) epsilon*I-(eta+rho)*D,
+          function(t, S, I, D, A, R, Th, H, E) zeta*I-(theta+mu+kappa)*A,
+          function(t, S, I, D, A, R, Th, H, E) eta*D+theta*A-(nu+xi)*R,
+          function(t, S, I, D, A, R, Th, H, E) mu*A+nu*R-(sigma+tau)*Th,
+          function(t, S, I, D, A, R, Th, H, E) lambda*I+rho*D+kappa*A+xi*R+sigma*Th,
+          function(t, S, I, D, A, R, Th, H, E) tau*Th
+)
+# Solving the ODE system with RK4
+sol <- ode(f = f, IC = initial_conditions, parameters = parameters, t0 = 0, tn = tn, n = n)
+
+
+# Plotting model output and fits to data
+par(mfrow = c(2, 2))
+plot(sol$time, sol$S, type = "l", main = "Fractions of population", ylim = c(0, 1), xlab = "days", ylab = "% of population")
+for(i in 3:9)
+{
+  lines(sol[, 1], sol[, i], col = i-1)
+}
+legend(x = "topright", 
+       legend = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), 
+       lty = 1, col = c(1:10), cex = 0.5)
+
+# Daily cases
+plot(c(ny_dat$date, extended_dates), c(ny_dat$cases, rep(NA, Nf)), ylim = c(0, max(ny_dat$cases, sol$D*pop)), xlab = "Date", ylab = "# of cases", main = "Daily cumulative NY cases")
+lines(c(ny_dat$date, extended_dates), sol$D[sol$time%%1==0]*pop, col = "green")
+
+# Daily deaths
+plot(c(ny_dat$date, extended_dates), c(ny_dat$deaths, rep(NA, Nf)), ylim = c(0, max(ny_dat$deaths, sol$E*pop)), xlab = "Date", ylab = "# of deaths", main = "Daily cumulative NY deaths")
+lines(c(ny_dat$date, extended_dates), sol$E[sol$time%%1==0]*pop, col = "grey")
+
+# Death-rate
+plot(ny_dat$date, ny_dat$deaths/ny_dat$cases, main = "Death rate")
+
+# Printing the reproductive ratio
+print(paste("R0 = ", repo))
 ```
 
