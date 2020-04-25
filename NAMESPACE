@@ -3,5 +3,7 @@
 export(classify_equilibrium)
 export(ode)
 export(ode1)
+export(plot_phase_portrait)
+export(plot_trajectories)
 export(sidarthe)
 export(sir)

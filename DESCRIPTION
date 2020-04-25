@@ -8,6 +8,7 @@ Description: Returns numerical solutions to basic ODE problems, e.g. the SIR mod
     Can also handle generic first-order systems of ODEs. Finally, it includes a simple numerical solver for the novel 
     SIDARTHE model developed in Italy to study the COVID-19 pandemic. The solver can use either the basic Euler scheme or the fourth-order Runge-Kutta method.
 License: MIT + file LICENSE
+Imports: graphics, plot3D
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.2
