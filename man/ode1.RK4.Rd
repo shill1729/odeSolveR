@@ -5,8 +5,6 @@
 \title{Runge-Kutta for first order ODE}
 \usage{
 ode1.RK4(f, y0, t0 = 0, tn = 1, n = 1000)
-
-ode1.RK4(f, y0, t0 = 0, tn = 1, n = 1000)
 }
 \arguments{
 \item{f}{the function of t and y in the explicit ODE \eqn{y'=f(t,y)}}
@@ -21,16 +19,10 @@ ode1.RK4(f, y0, t0 = 0, tn = 1, n = 1000)
 }
 \value{
 data.frame of the time grid and solution grid
-
-data.frame of the time grid and solution grid
 }
 \description{
 {One dimensional first order ODE solver via Runge-Kutta fourth-order method.}
-
-{One dimensional first order ODE solver via Runge-Kutta fourth-order method.}
 }
 \details{
-{\code{f} must be a function of time and the state variable \code{y}}
-
 {\code{f} must be a function of time and the state variable \code{y}}
 }

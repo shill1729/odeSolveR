@@ -25,9 +25,9 @@ ode(f, IC, parameters, t0 = 0, tn = 1, n = 1000, engine = "RK4")
 data.frame
 }
 \description{
-{A solver for arbitrary first-order ODE systems of finite dimension, using either RK4 (default) or an Euler scheme..}
+{A solver for arbitrary first-order ODE systems of finite dimension, using either RK4 (default) or an Euler scheme.}
 }
 \details{
-{The list of functions must have syntax \code{f(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.
+{The list of functions must have syntax e.g. \code{f(t,x,y,z)} for each element matching the named elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.
 Further, the engine must be either "RK4" for a fourth-order Runge-Kutta method, or "Euler" for an Euler scheme.}
 }
