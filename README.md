@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-A basic ODE solver using Euler scheme and fourth-order Runge-Kutta scheme implementations to numerically solve arbitrary first order one dimensional ODEs and systems of first-order ODEs. The default scheme used is the latter RK4 scheme. Also included is the basic SIR model and an extended SIR model called the SIDARTHE model from mathematical epidemiology. Please see the original  **[paper](https://arxiv.org/abs/2003.09861)** by the COVID19 IRCCS San Matteo Pavia Task Force et al. for mathematical details and discussion of the SIDARTHE model that is numerically solved via Euler schemes in this simple ODE-solver.
+A basic ODE solver using **[Euler scheme](https://en.wikipedia.org/wiki/Euler_method)** and fourth-order **[Runge-Kutta scheme](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)** implementations to numerically solve arbitrary first order one dimensional ODEs and systems of first-order ODEs. The default scheme used is the latter RK4 scheme. Also included is the basic SIR model and an extended SIR model called the SIDARTHE model from mathematical epidemiology. Please see the original  **[paper](https://arxiv.org/abs/2003.09861)** by the COVID19 IRCCS San Matteo Pavia Task Force et al. for mathematical details and discussion of the SIDARTHE model that is numerically solved via Euler schemes in this simple ODE-solver.
 
 The documentation should be sufficient for setting up custom problems, however, we also provide below a series of examples from the 1970s to the 2000s demonstrating how to use the generic solver. The examples are pulled from S. Strogatz's excellent *Nonlinear Dynamics and Chaos* (2015) with the original authors listed.
 
