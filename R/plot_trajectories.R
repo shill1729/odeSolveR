@@ -22,9 +22,13 @@ plot_trajectories <- function(sol, legend_names = NULL, legend_loc = "topright",
   }
   m <- dim(sol)[2]
   graphics::plot(sol$time, sol[, 2], type = "l", main = "Solution trajectory over time", xlab = "time", ylab = "state", ylim = c(min(sol[,-1]), max(sol[, -1])))
-  for(i in 3:m)
+  if(m > 2)
   {
-    graphics::lines(sol$time, sol[, i], col = i-1)
+    for(i in 3:m)
+    {
+      graphics::lines(sol$time, sol[, i], col = i-1)
+    }
+    graphics::legend(x = legend_loc, legend = legend_names, col = c(1:(m-1)), lty = 1, cex = legend_size)
   }
-  graphics::legend(x = legend_loc, legend = legend_names, col = c(1:(m-1)), lty = 1, cex = legend_size)
+
 }
