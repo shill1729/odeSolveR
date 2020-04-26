@@ -22,7 +22,7 @@ plot_phase_portrait <- function(sol, states = NULL)
     } else if(d == 3)
     {
       states <- c(2, 3)
-      plot3D::lines3D(sol[, 2], sol[, 3], sol[, 4], type = "l", main = "Phase portrait",)
+      plot3D::lines3D(sol[, 2], sol[, 3], sol[, 4], type = "l", main = "Phase portrait")
     }
   } else
   {
@@ -35,7 +35,7 @@ plot_phase_portrait <- function(sol, states = NULL)
       graphics::plot(sol[, states[1]], sol[, states[2]], type = "l", main = "Phase plane", xlab = names(sol)[states[1]], ylab = names(sol)[states[2]])
     } else if(length(states) == 3)
     {
-      plot3D::lines3D(sol[, states[1]], sol[, states[2]], sol[, states[3]], type = "l", main = "Phase portrait",)
+      plot3D::lines3D(sol[, states[1]], sol[, states[2]], sol[, states[3]], type = "l", main = "Phase portrait")
     } else if(length(states) >3)
     {
       stop("Cannot plot in more than 3-coordinates")
