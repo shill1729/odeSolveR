@@ -6,7 +6,7 @@
 
 A basic ODE solver using **[Euler scheme](https://en.wikipedia.org/wiki/Euler_method)** and fourth-order **[Runge-Kutta scheme](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)** implementations to numerically solve arbitrary first order one dimensional ODEs and systems of first-order ODEs. The default scheme used is the latter RK4 scheme. Also included is the basic SIR model and an extended SIR model called the SIDARTHE model from mathematical epidemiology. Please see the original  **[paper](https://arxiv.org/abs/2003.09861)** by the COVID19 IRCCS San Matteo Pavia Task Force et al. for mathematical details and discussion of the SIDARTHE model that is numerically solved via Euler schemes in this simple ODE-solver.
 
-The documentation should be sufficient for setting up custom problems, however, we also provide below a series of examples from the 1970s to the 2000s demonstrating how to use the generic solver. The examples are pulled from S. Strogatz's excellent *Nonlinear Dynamics and Chaos* (2015) with the original authors listed.
+The documentation should be sufficient for setting up custom problems, however, we also provide below a series of examples from the 1970s to the 2000s demonstrating how to use the generic solver. The examples are pulled from S. Strogatz's excellent *Nonlinear Dynamics and Chaos* (2015) with the original authors of the model listed.
 
 # Table of contents
 1. [Installation](#installation)
@@ -29,7 +29,7 @@ The documentation should be sufficient for setting up custom problems, however, 
     
     f. [Haken two-mode laser model](#haken-two-mode-laser-model)
     
-    g. [Reversible System example](#reversible-system-example)
+    g. [LRC circuit](#lrc-circuit)
 
 5. [SIDARTHE examples](#sidarthe-examples)
 
@@ -74,8 +74,11 @@ This will replicate the above SIR example (without all the plots...) that is imp
 library(odeSolveR)
 # Numerical parameters
 t0 <- 0
-tn <- 90
+tn <- 100
 n <- 1000
+
+# Initial conditions
+IC <- list(s = 1-0.01, i = 0.01, r = 0)
 
 # Model parameters
 parameters <- list(beta = 1/2, gamma = 1/3)
@@ -84,19 +87,22 @@ parameters <- list(beta = 1/2, gamma = 1/3)
 list2env(parameters, envir = .GlobalEnv)
 
 # The functions describing rate of change of each state variable in the ODE system
-f <- list(function(t, s, i, r) -beta*s*i, function(t, s, i, r) beta*i*s-gamma*i, function(t, s, i, r) gamma*i)
+f <- list(function(t, s, i, r) -beta*s*i, 
+          function(t, s, i, r) beta*i*s-gamma*i, 
+          function(t, s, i, r) gamma*i
+          )
 
-# Initial conditions
-IC <- list(s = 1-0.001, i = 0.001, r = 0)
 # Solve the system via RK4 iterations
-sol <- ode(f, IC, parameters, tn = 90)
+sol <- ode(f, IC, parameters, tn = tn, n = n)
 
 # Plotting trajectories
-par(mfrow = c(1, 1))
-plot(sol$time, sol$s, type = "l", main = "Fraction of populations", ylim = c(0, 1))
-lines(sol$time, sol$i, col = "red")
-lines(sol$time, sol$r, col = "blue")
-legend(x = "topright", legend = c("susceptible", "infected", "recovered"), col = c("black", "red", "blue"), lty = 1)
+par(mfrow = c(2, 1))
+plot_trajectories(sol, legend_names =  c("susceptible", "infected", "recovered"))
+
+# Plotting phase portrait
+plot_phase_portrait(sol)
+plot3D::points3D(gamma/beta, 0, 1, add = TRUE)
+
 ```
 ![SIR](examplePlots/sir.jpeg)
 
@@ -296,39 +302,73 @@ plot(sol$n1, sol$n2, main = "Phase portrait", type = "l")
 ```
 ![Laser](examplePlots/laser.jpeg)
 
-### Reversible System example
-
-Here is an example of a reversible system sometimes referred to as "wallpaper" (Strogatz 2015).
+### LRC circuit
+The charge of the capacitor in a basic LRC circuit can be modeled by a second-order ODE. Here the (x) coordinate is the charge, and (y) is the current (the time derivative of the charge.)
 
 ```r
 library(odeSolveR)
-
-# Numerical parameters
-t0 <- 0
-tn <- 100
-n <- 5000
-
-parameters <- list()
-
-# Create the functions that describe the rates of change for each state variable in the ODE system
-f <- list(function(t, x, y) sin(y),
-          function(t, x, y) sin(x)
-)
-
+tn <- 20
+n <- 4000
 # Initial conditions
-IC <- list(x = 1, y = 0.01)
-# Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+#' x = charge of the capacitor
+#' y = current (time-derivative of charge, i.e. velocity of charge)
+IC <- list(x = 0, y = 0)
+# Parameters
+#' L = inductance in henrys
+#' R = resistance in ohms 
+#' C = capicitance in farads
+parameters <- list(L = 1, 
+                   R = 1, 
+                   C = 1/30
+                   )
+# Load parameters to global environment
+list2env(x = parameters, envir = .GlobalEnv)
+# Energy, the non-homogeneous component of the ODE
+energy <- function(t) {100}
+# Standard form functions of ODE
+f <- list(
+  function(t, x, y) y,
+  function(t, x, y) energy(t)-(R/L)*y-x/(C*L)
+)
+# RK4 Solution
+sol <- ode(f = f, IC = IC, parameters = parameters, t0 = 0, tn = tn, n = n)
 
+# Summary of specs:
+# in units of angular freq. Measures how fast the transient response of the circuit will die away after stimulus is removed
+attenuation <- R/(2*L) # nepers per second
+angular_resonance_freq <- 1/sqrt(L*C) # angular frequency
+damping_factor <- attenuation/angular_resonance_freq # unitless damping factor
+specs <- data.frame(inductance = L, # henry
+                    resistance = R, # Ohms
+                    capacitance = C, # farads
+                    attenuation = attenuation, # Nepers per second
+                    bandwidth = 2*attenuation, # nepers per second
+                    fractional_bandwith = 2*attenuation/angular_resonance_freq, # percentage
+                    angular_resonance_freq = angular_resonance_freq, # angular frequency
+                    resonance_freq = angular_resonance_freq/(2*pi), # hertz
+                    damping_factor = damping_factor # unitless
+                    )
+specs$transient_type <- ifelse(damping_factor > 1, "overdamped", ifelse(damping_factor < 1, "underdamped", "critically damped"))
+specs$Q_factor <- 1/specs$fractional_bandwith
+specs$damped_resonance_freq <- ifelse(damping_factor < 1, sqrt(angular_resonance_freq^2-attenuation^2), NA)
+# Linear- matrix and stability classification
+fixed_point <- c(C*L*energy(sol$time[n+1]), 0)
+A <- rbind(c(0, 1), c(-1/(C*L), -R/L))
+
+# Output:
+# Plotting trajectories and phase-plane
 par(mfrow = c(2, 1))
-# State trajectories over time
-plot(sol$time, sol$x, type = "l", col = "blue", ylim = c(min(sol$x, sol$y), max(sol$x, sol$y)), main = "Trajectory over time")
-lines(sol$time, sol$y, col = "red")
-
-# 2 Dimensional phase portrait
-plot(sol$x, sol$y, main = "Phase portrait", type = "l")
+plot_trajectories(sol, legend_loc = "topright", legend_names = c("charge", "current"), legend_size = 0.7)
+plot_phase_portrait(sol)
+points(sol$x[1], sol$y[1], col = "green")
+points(C*L*energy(sol$time[n+1]), 0, col = "red")
+# Final print
+print(specs)
+print(classify_equilibrium(A))
+print(fixed_point)
 ```
-![Wallpaper](examplePlots/wallpaper.jpeg)
+![LRC circuit](examplePlots/LRC.jpeg)
+
 
 ## SIDARTHE examples
 
@@ -447,14 +487,7 @@ sol <- ode(f = f, IC = initial_conditions, parameters = parameters, t0 = 0, tn =
 
 # Plotting model output and fits to data
 par(mfrow = c(2, 2))
-plot(sol$time, sol$S, type = "l", main = "Fractions of population", ylim = c(0, 1), xlab = "days", ylab = "% of population")
-for(i in 3:9)
-{
-  lines(sol[, 1], sol[, i], col = i-1)
-}
-legend(x = "topright", 
-       legend = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), 
-       lty = 1, col = c(1:10), cex = 0.5)
+plot_trajectories(sol, legend_names = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), legend_size = 0.7)
 
 # Daily cases
 plot(c(us_dat$date, extended_dates), c(us_dat$cases, rep(NA, Nf)), ylim = c(0, max(us_dat$cases, sol$D*pop)), xlab = "Date", ylab = "# of cases", main = "Daily cumulative US cases")
@@ -553,14 +586,7 @@ sol <- ode(f = f, IC = initial_conditions, parameters = parameters, t0 = 0, tn =
 
 # Plotting model output and fits to data
 par(mfrow = c(2, 2))
-plot(sol$time, sol$S, type = "l", main = "Fractions of population", ylim = c(0, 1), xlab = "days", ylab = "% of population")
-for(i in 3:9)
-{
-  lines(sol[, 1], sol[, i], col = i-1)
-}
-legend(x = "topright", 
-       legend = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), 
-       lty = 1, col = c(1:10), cex = 0.5)
+plot_trajectories(sol, legend_names = c("Susceptible", "Infected", "Diagnosed", "Ailing", "Recognized", "Threatened", "Healed", "Extinct"), legend_size = 0.7)
 
 # Daily cases
 plot(c(ny_dat$date, extended_dates), c(ny_dat$cases, rep(NA, Nf)), ylim = c(0, max(ny_dat$cases, sol$D*pop)), xlab = "Date", ylab = "# of cases", main = "Daily cumulative NY cases")
