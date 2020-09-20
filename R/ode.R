@@ -17,11 +17,11 @@ ode <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000, engine = "RK4")
 {
   if(engine == "RK4")
   {
-    print("Solving ODE using fourth-order Runge-Kutta scheme")
+    # print("Solving ODE using fourth-order Runge-Kutta scheme")
     return(ode.RK4(f, IC, parameters, t0, tn, n))
   } else if(engine == "Euler")
   {
-    print("Solving ODE using simple Euler scheme")
+    # print("Solving ODE using simple Euler scheme")
     return(ode.EulerScheme(f, IC, parameters, t0, tn, n))
   } else
   {
