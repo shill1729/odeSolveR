@@ -4,12 +4,12 @@
 \alias{ode.EulerScheme}
 \title{Solve arbitrary first order ODE systems}
 \usage{
-ode.EulerScheme(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
+ode.EulerScheme(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000)
 }
 \arguments{
-\item{f}{a list of functions with as many variables as IC, and in the same order with the names}
+\item{dynamics}{a list of functions with as many variables as IC, and in the same order with the names defining the dynamics of the system}
 
-\item{IC}{a list of variables with the same names as the non-time input as f, in the same order with initial values}
+\item{IC}{a list of variables with the same names as the non-time input as dynamics, in the same order with initial values}
 
 \item{parameters}{a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)}
 
@@ -26,5 +26,5 @@ data.frame
 {A general Euler scheme implementation for arbitrary first-order ODE systems of finite dimension.}
 }
 \details{
-{The list of functions must have syntax \code{f(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
+{The list of functions each element with arguments \code{(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
 }

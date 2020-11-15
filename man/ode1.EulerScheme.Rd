@@ -4,10 +4,10 @@
 \alias{ode1.EulerScheme}
 \title{Euler scheme for first order ODEs}
 \usage{
-ode1.EulerScheme(f, y0, t0 = 0, tn = 1, n = 1000)
+ode1.EulerScheme(dynamics, y0, t0 = 0, tn = 1, n = 1000)
 }
 \arguments{
-\item{f}{the function of t and y in the explicit ODE \eqn{y'=f(t,y)}}
+\item{dynamics}{the function of t and y in the explicit ODE \eqn{y'=f(t,y)}}
 
 \item{y0}{the initial value}
 

@@ -4,10 +4,10 @@
 \alias{ode}
 \title{Solve arbitrary first order ODE systems}
 \usage{
-ode(f, IC, parameters, t0 = 0, tn = 1, n = 1000, engine = "RK4")
+ode(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000, engine = "RK4")
 }
 \arguments{
-\item{f}{a list of functions with as many variables as IC, and in the same order with the names}
+\item{dynamics}{a list of functions with as many variables as IC, and in the same order with the names}
 
 \item{IC}{a list of variables with the same names as the non-time input as f, in the same order with initial values}
 

@@ -4,10 +4,10 @@
 \alias{ode1.RK4}
 \title{Runge-Kutta for first order ODE}
 \usage{
-ode1.RK4(f, y0, t0 = 0, tn = 1, n = 1000)
+ode1.RK4(dynamics, y0, t0 = 0, tn = 1, n = 1000)
 }
 \arguments{
-\item{f}{the function of t and y in the explicit ODE \eqn{y'=f(t,y)}}
+\item{dynamics}{the function of t and y in the explicit ODE \eqn{y'=f(t,y)}}
 
 \item{y0}{the initial value}
 

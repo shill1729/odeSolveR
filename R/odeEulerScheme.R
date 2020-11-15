@@ -1,16 +1,16 @@
 #' Solve arbitrary first order ODE systems
 #'
-#' @param f a list of functions with as many variables as IC, and in the same order with the names
-#' @param IC a list of variables with the same names as the non-time input as f, in the same order with initial values
+#' @param dynamics a list of functions with as many variables as IC, and in the same order with the names defining the dynamics of the system
+#' @param IC a list of variables with the same names as the non-time input as dynamics, in the same order with initial values
 #' @param parameters a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)
 #' @param t0 initial time
 #' @param tn ending time
 #' @param n number of sub-intervals in time-grid
 #'
 #' @description {A general Euler scheme implementation for arbitrary first-order ODE systems of finite dimension.}
-#' @details {The list of functions must have syntax \code{f(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
+#' @details {The list of functions each element with arguments \code{(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
 #' @return data.frame
-ode.EulerScheme <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
+ode.EulerScheme <- function(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000)
 {
   # Time step size
   h <- (tn-t0)/n
@@ -40,7 +40,7 @@ ode.EulerScheme <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
         input[[l+1]] <- states[[l]][j-1]
       }
       names(input) <- c("t", names(IC))
-      states[[i]][j] <- states[[i]][j-1]+h*do.call(what = f[[i]], args = input)
+      states[[i]][j] <- states[[i]][j-1]+h*do.call(what = dynamics[[i]], args = input)
     }
   }
   states <- data.frame(time = tt, do.call(cbind, states))

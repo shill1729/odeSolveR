@@ -1,6 +1,6 @@
 #' Solve arbitrary first order ODE systems via fourth-order Runge-Kutta scheme
 #'
-#' @param f a list of functions with as many variables as IC, and in the same order with the names
+#' @param dynamics a list of functions defining the dynamics of the system, with as many variables as IC, and in the same order with the names
 #' @param IC a list of variables with the same names as the non-time input as f, in the same order with initial values
 #' @param parameters a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)
 #' @param t0 initial time
@@ -8,9 +8,9 @@
 #' @param n number of sub-intervals in time-grid
 #'
 #' @description {An implementation of the fourth-order Runge-Kutta scheme for arbitrary first-order ODE systems of finite dimension.}
-#' @details {The list of functions must have syntax \code{f(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
+#' @details {The list of functions, each of which must have arguments \code{(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
 #' @return data.frame
-ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
+ode.RK4 <- function(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000)
 {
   # Time step size
   h <- (tn-t0)/n
@@ -57,7 +57,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       # Evaluate k1=f(t, x, y, z,...) for all states
       for(l in 1:m)
       {
-        k1[[l]] <- do.call(what = f[[l]], args = input1)
+        k1[[l]] <- do.call(what = dynamics[[l]], args = input1)
       }
       # Get input ready for k2
       for(l in 1:m)
@@ -70,7 +70,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       # Evaluate k2=f(t, x, y, z,...) for all states
       for(l in 1:m)
       {
-        k2[[l]] <- do.call(what = f[[l]], args = input2)
+        k2[[l]] <- do.call(what = dynamics[[l]], args = input2)
       }
       # Get input ready for k3
       for(l in 1:m)
@@ -82,7 +82,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       # Evaluate k3=f(t, x, y, z,...) for all states
       for(l in 1:m)
       {
-        k3[[l]] <- do.call(what = f[[l]], args = input3)
+        k3[[l]] <- do.call(what = dynamics[[l]], args = input3)
       }
       # Get input ready for k4 the final term
       for(l in 1:m)
@@ -92,7 +92,7 @@ ode.RK4 <- function(f, IC, parameters, t0 = 0, tn = 1, n = 1000)
       names(input4) <- c("t", names(IC))
       for(l in 1:m)
       {
-        k4[[l]] <- do.call(what = f[[l]], args = input4)
+        k4[[l]] <- do.call(what = dynamics[[l]], args = input4)
       }
 
       # The Runge-Kutta method: y[j]=y[j-1]+(h/6)(k1+2k2+2k3+k4), over every state variable and from their respective ODE function
