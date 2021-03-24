@@ -2,7 +2,6 @@
 #'
 #' @param dynamics a list of functions defining the dynamics of the system, with as many variables as IC, and in the same order with the names
 #' @param IC a list of variables with the same names as the non-time input as f, in the same order with initial values
-#' @param parameters a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)
 #' @param t0 initial time
 #' @param tn ending time
 #' @param n number of sub-intervals in time-grid
@@ -10,7 +9,7 @@
 #' @description {An implementation of the fourth-order Runge-Kutta scheme for arbitrary first-order ODE systems of finite dimension.}
 #' @details {The list of functions, each of which must have arguments \code{(t,x,y,z)} for each element matching the elements of \code{IC} as \code{list(x = y0, y = y0, z = z0)} for example.}
 #' @return data.frame
-ode.RK4 <- function(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000)
+ode.RK4 <- function(dynamics, IC, t0 = 0, tn = 1, n = 1000)
 {
   # Time step size
   h <- (tn-t0)/n

@@ -2,7 +2,6 @@
 #'
 #' @param dynamics a list of functions with as many variables as IC, and in the same order with the names
 #' @param IC a list of variables with the same names as the non-time input as f, in the same order with initial values
-#' @param parameters a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)
 #' @param t0 initial time
 #' @param tn ending time
 #' @param n number of sub-intervals in time-grid
@@ -13,16 +12,16 @@
 #' Further, the engine must be either "RK4" for a fourth-order Runge-Kutta method, or "Euler" for an Euler scheme.}
 #' @return data.frame
 #' @export ode
-ode <- function(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000, engine = "RK4")
+ode <- function(dynamics, IC, t0 = 0, tn = 1, n = 1000, engine = "RK4")
 {
   if(engine == "RK4")
   {
     # print("Solving ODE using fourth-order Runge-Kutta scheme")
-    return(ode.RK4(dynamics, IC, parameters, t0, tn, n))
+    return(ode.RK4(dynamics, IC, t0, tn, n))
   } else if(engine == "Euler")
   {
     # print("Solving ODE using simple Euler scheme")
-    return(ode.EulerScheme(dynamics, IC, parameters, t0, tn, n))
+    return(ode.EulerScheme(dynamics, IC, t0, tn, n))
   } else
   {
     stop("engine must be either: 'RK4' or 'Euler'")

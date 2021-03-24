@@ -93,7 +93,7 @@ f <- list(function(t, s, i, r) -beta*s*i,
           )
 
 # Solve the system via RK4 iterations
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 # Plotting trajectories
 par(mfrow = c(2, 1))
@@ -133,7 +133,7 @@ f <- list(function(t, x, y, z) sigma*(y-x),
 # Initial conditions: names and order must match variables appearing after "t" in function definitions above!
 IC <- list(x = 1, y = 1, z = 1)
 # Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 # Plot 2 dimension phase space of x-z variables
 plot(sol$x, sol$z, type = "l", main = "x-z Phase plane")
@@ -170,7 +170,7 @@ f <- list(function(t, x, y, z) r*x*z,
 # Initial conditions
 IC <- list(x = 0.5, y = 0.4, z = 0.10)
 # Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 par(mfrow = c(2, 1))
 # State trajectories over time
@@ -211,7 +211,7 @@ f <- list(function(t, I, C, G) I-alpha*C,
 # Initial conditions
 IC <- list(I = 300, C = 100, G = 300*k)
 # Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 par(mfrow = c(2, 1))
 # State trajectories over time
@@ -248,7 +248,7 @@ f <- list(function(t, x1, x2, x3) x1*(x3-x1*x3-x2*x1-x3*x2),
 # Initial conditions
 IC <- list(x1 = 0.3, x2 = 0.6, x3 = 0.1)
 # Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 par(mfrow = c(2, 1))
 # State trajectories over time
@@ -290,7 +290,7 @@ f <- list(function(t, n1, n2) G1*(N0-alpha1*n1-alpha2*n2)-k1*n1,
 # Initial conditions
 IC <- list(n1 = 0, n2 = 0)
 # Solve the system using RK4
-sol <- ode(f, IC, parameters, tn = tn, n = n)
+sol <- ode(f, IC, tn = tn, n = n)
 
 par(mfrow = c(2, 1))
 # State trajectories over time
@@ -331,7 +331,7 @@ f <- list(
   function(t, x, y) energy(t)-(R/L)*y-x/(C*L)
 )
 # RK4 Solution
-sol <- ode(f = f, IC = IC, parameters = parameters, t0 = 0, tn = tn, n = n)
+sol <- ode(f, IC = IC, t0 = 0, tn = tn, n = n)
 
 # Summary of specs:
 # in units of angular freq. Measures how fast the transient response of the circuit will die away after stimulus is removed

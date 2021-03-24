@@ -4,14 +4,12 @@
 \alias{ode.EulerScheme}
 \title{Solve arbitrary first order ODE systems}
 \usage{
-ode.EulerScheme(dynamics, IC, parameters, t0 = 0, tn = 1, n = 1000)
+ode.EulerScheme(dynamics, IC, t0 = 0, tn = 1, n = 1000)
 }
 \arguments{
 \item{dynamics}{a list of functions with as many variables as IC, and in the same order with the names defining the dynamics of the system}
 
 \item{IC}{a list of variables with the same names as the non-time input as dynamics, in the same order with initial values}
-
-\item{parameters}{a list of auxillary parameters of the model defined globally (it is not actually used in the function call...)}
 
 \item{t0}{initial time}
 
